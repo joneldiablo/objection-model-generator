@@ -1,0 +1,8 @@
+{
+  "presets": ["es2015", "minify"],
+  "plugins": [
+    ["add-module-exports", {
+      "addDefaultProperty": true
+    }], "transform-object-rest-spread"
+  ]
+}
