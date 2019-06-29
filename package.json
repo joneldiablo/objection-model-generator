@@ -1,10 +1,19 @@
 {
   "name": "objection-model-generator",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "repository": "https://github.com/joneldiablo/objection-model-generator",
   "description": "generate the model from mysql database",
   "main": "lib/ObjectionModelGenerator.js",
   "author": "joneldiablo",
+  "keywords": [
+    "objection",
+    "objectionjs",
+    "model",
+    "automation",
+    "automagically",
+    "mysql",
+    "models"
+  ],
   "scripts": {
     "init": "npm i && npm run build && npm run doc",
     "start": "node main.js",
