@@ -8,8 +8,10 @@ import {
 
 import { version } from "../package.json";
 import {
+  KeyColumnUsage,
   TableModel
 } from './models';
+import { constants } from 'zlib';
 
 const dataTypes = (type) => {
   /* 
@@ -127,12 +129,17 @@ export default class ObjectionModelGenerator {
       dbFile
     });
     TableModel.dbName = dbName;
-    let tables = await TableModel.query().where('table_schema', '=', dbName).eager('[columns.[constrain]]');
+    let cns = await KeyColumnUsage.query()
+      .whereNotNull('REFERENCED_COLUMN_NAME')
+      .andWhere('table_schema', '=', dbName);
+    let tables = await TableModel.query()
+      .where('table_schema', '=', dbName)
+      .eager('[columns]');
     let classModelNames = {
       classes: [],
       dbFile
     };
-    tables.forEach(table => {
+    tables.forEach(async table => {
       let modelName = singularize(table.TABLE_NAME);
       modelName = camelCase(modelName);
       modelName = capitalize(modelName);
@@ -143,9 +150,9 @@ export default class ObjectionModelGenerator {
         modelName: modelName + 'Model',
         tableName: table.TABLE_NAME,
         properties: table.columns.map(column => {
-          if (column.constrain) {
-            constrains.push(column.constrain);
-          }
+          constrains.push(...cns.filter(cn =>
+            table.TABLE_NAME === cn.TABLE_NAME
+            && column.COLUMN_NAME === cn.COLUMN_NAME));
           if (column.IS_NULLABLE === 'NO' && !column.COLUMN_DEFAULT && column.COLUMN_NAME !== 'id') {
             requireds.push(column.COLUMN_NAME);
           }
@@ -163,6 +170,7 @@ export default class ObjectionModelGenerator {
         relations: constrains.map(column => {
           let targetTableName = singularize(column.REFERENCED_TABLE_NAME);
           targetTableName = camelCase(targetTableName);
+
           return {
             name: targetTableName,
             column: column.COLUMN_NAME,

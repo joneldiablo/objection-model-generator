@@ -33,13 +33,13 @@ let {{modelName}};
       }
     }
   }
-{{#relations}}
+
   /**
    * @override
    */
   static get relationMappings() {
     return {
-      
+      {{#relations}}
       {{name}}: {
         relation: Model.BelongsToOneRelation,
         modelClass: {{targetModel}},
@@ -48,10 +48,9 @@ let {{modelName}};
           to: '{{targetTableName}}.{{targetColumn}}'
         }
       },
-      
+      {{/relations}}
     };
   }
-{{/relations}}
 
 }
 
