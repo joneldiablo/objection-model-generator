@@ -1,4 +1,5 @@
 import fs from 'fs-extra';
+import path from 'path';
 import pluralize from 'pluralize';
 import Mustache from 'mustache';
 import Knex from 'knex';
@@ -121,9 +122,11 @@ export default class ObjectionModelGenerator {
       dbName,
       dbFile
     } = this;
-
-    let templateModelHeader = await fs.readFile('templates/modelHeaderTemplate.mustache', 'UTF-8');
-    let templateModel = await fs.readFile('templates/modelTemplate.mustache', 'UTF-8');
+    let pt = path.join(__dirname, '../templates/');
+    let mht = path.join(pt, 'modelHeaderTemplate.mustache');
+    let mt = path.join(pt, 'modelTemplate.mustache');
+    let templateModelHeader = await fs.readFile(mht, 'UTF-8');
+    let templateModel = await fs.readFile(mt, 'UTF-8');
 
     let models = Mustache.render(templateModelHeader, {
       dbFile
