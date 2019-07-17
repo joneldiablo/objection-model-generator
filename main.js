@@ -9,7 +9,7 @@ const main = async () => {
     user: process.env.DB_USER,
     password: process.env.DB_PASS
   }, 'headsmusic', '../db');
-  let ms = await omg.createFiles();
+  let ms = await omg.createModels();
   await fs.writeFile('output/ms.js', ms);
   console.log('\n -> file writed: output/ms.js');
 }

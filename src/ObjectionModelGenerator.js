@@ -117,7 +117,7 @@ export default class ObjectionModelGenerator {
     Model.knex(knex);
   }
 
-  async createFiles() {
+  async createModels(prefix) {
     let {
       dbName,
       dbFile
@@ -135,9 +135,15 @@ export default class ObjectionModelGenerator {
     let cns = await KeyColumnUsage.query()
       .whereNotNull('REFERENCED_COLUMN_NAME')
       .andWhere('table_schema', '=', dbName);
-    let tables = await TableModel.query()
-      .where('table_schema', '=', dbName)
-      .eager('[columns]');
+    let promiseTable = TableModel.query()
+      .where('table_schema', '=', dbName);
+    if (prefix) {
+      promiseTable = promiseTable
+        .andWhere('table_name', 'like', prefix + '%');
+    }
+    let tables = await promiseTable.eager('[columns]');
+
+
     let classModelNames = {
       classes: [],
       dbFile

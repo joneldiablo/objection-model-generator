@@ -14,7 +14,8 @@ const main = async () => {
     user: 'root',
     password: 'root'
   }, 'dbName');
-  let models = await omg.createFiles();
+  // you can set a prefix to filter tables or not
+  let models = await omg.createModels('access_');
   await fs.writeFile('output/ms.js', models);
   console.log('\n -> file writed: output/ms.js');
 }

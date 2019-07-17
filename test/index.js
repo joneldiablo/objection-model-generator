@@ -8,8 +8,8 @@ const main = async () => {
     port: process.env.DB_PORT,
     user: process.env.DB_USER,
     password: process.env.DB_PASS
-  }, 'headsmusic', '../db');
-  let ms = await omg.createFiles();
+  }, 'ecommerce');
+  let ms = await omg.createModels('access_');
   await fs.writeFile('output/ms.js', ms);
   console.log('\n -> file writed: output/ms.js');
 }
