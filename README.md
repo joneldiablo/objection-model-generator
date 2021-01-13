@@ -7,6 +7,8 @@ basic usage:
 const fs = require('fs');
 const ObjectionModelGenerator = require('objection-model-generator');
 
+const fsPromise = fs.promise;
+
 const main = async () => {
   let omg = new ObjectionModelGenerator({
     host: 'localhost',
@@ -16,7 +18,7 @@ const main = async () => {
   }, 'dbName');
   // you can set a prefix to filter tables or not
   let models = await omg.createModels('access_');
-  await fs.writeFile('output/ms.js', models);
+  await fsPromise.writeFile('output/ms.js', models);
   console.log('\n -> file writed: output/ms.js');
 }
 
