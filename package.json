@@ -1,6 +1,6 @@
 {
   "name": "objection-model-generator",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "repository": "https://github.com/joneldiablo/objection-model-generator",
   "description": "generate the model from mysql database",
   "main": "lib/ObjectionModelGenerator.js",
@@ -17,7 +17,7 @@
   "scripts": {
     "init": "npm i && npm run build && npm run doc",
     "start": "node main.js",
-    "build": "babel -d lib src --source-maps",
+    "build": "babel -d lib src --source-maps && yarn doc",
     "test": "nodemon -e .mustache,.js --ignore output --exec babel-node test",
     "doc": "jsdoc ./src -d documentation -c .jsdoc -r"
   },
