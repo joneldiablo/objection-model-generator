@@ -41,7 +41,7 @@ let {{modelName}};
     return {
       {{#relations}}
       {{name}}: {
-        relation: Model.BelongsToOneRelation,
+        relation: Model.HasOneRelation,
         modelClass: {{targetModel}},
         join: {
           from: '{{tableName}}.{{column}}',

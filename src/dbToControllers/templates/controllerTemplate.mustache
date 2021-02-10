@@ -1,0 +1,19 @@
+
+/**
+ * Extends from Controller abstract class, pass the {{model}} to super needed.
+ * @class
+ * @extends Controller
+ */
+class {{controller}} extends Controller {
+
+  constructor() {
+    super(models.{{model}});
+  }
+{{#rels}}
+  getByID(req, res, next) {
+    super.getByID(req, res, next, models.UserModel.query().eager('[{{rels}}]'));
+  }
+{{/rels}}
+
+}
+module.exports = {{controller}};

@@ -1,0 +1,63 @@
+{{#classes}}
+let {{modelName}};
+{{/classes}}
+
+{{#classes}}
+/**
+ * {{tableName}} model
+ * @extends Model
+ */
+{{modelName}} = class extends Model {
+
+  /**
+   * @override
+   */
+  static get tableName() {
+    return '{{tableName}}';
+  }
+
+  /**
+   * @override
+   */
+  static get jsonSchema() {
+    return {
+      type: 'object',
+      required: [{{#requireds}}'{{.}}',{{/requireds}}],
+      search: [{{#searches}}'{{.}}',{{/searches}}],
+      properties: {
+        {{#properties}}
+        {{name}}: {
+          type: '{{type}}'
+        },
+        {{/properties}}
+      }
+    }
+  }
+
+  /**
+   * @override
+   */
+  static get relationMappings() {
+    return {
+      {{#relations}}
+      {{name}}: {
+        relation: Model.BelongsToOneRelation,
+        modelClass: {{targetModel}},
+        join: {
+          from: '{{tableName}}.{{column}}',
+          to: '{{targetTableName}}.{{targetColumn}}'
+        }
+      },
+      {{/relations}}
+    };
+  }
+
+}
+
+{{/classes}}
+
+module.exports = {
+  {{#classes}}
+  {{modelName}}: {{modelName}}.bindKnex(knex),
+  {{/classes}}
+}

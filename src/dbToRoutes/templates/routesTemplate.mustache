@@ -1,0 +1,13 @@
+/**
+ * This file was generated with `node ./tools/dbToRoutes`, don't modify, 
+ * instead, extend from this.
+ * @author Jonathan Diego Rodríguez Rdz. <jonathan@bquate.com>
+ */
+
+const routes = {
+  {{#routes}}
+  '{{{route}}}':'{{controller}}',
+  {{/routes}}
+};
+
+module.exports = routes;
