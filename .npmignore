@@ -7,3 +7,5 @@ node_modules
 .vscode
 .env
 output
+build.sh
+update-version.js
