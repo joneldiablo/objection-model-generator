@@ -1,7 +1,9 @@
 require('dotenv').config();
+const fs = require('fs');
 const models = require('../src/dbToModel');
 const controllers = require('../src/dbToControllers');
 const routes = require('../src/dbToRoutes');
+const ObjectionModelGenerator = require('../lib/ObjectionModelGenerator');
 
 const main = async () => {
   const connection = {
@@ -15,6 +17,10 @@ const main = async () => {
   const routesPromise = routes(process.env.DB_NAME, connection, './test/routes/index.js');
   const all = await Promise.all([modelsPromise, controllersPromise, routesPromise]);
   console.log(all);
+  // using omg
+  let omg = new ObjectionModelGenerator(connection, 'mangibone');
+  let ms = await omg.createModels();
+  fs.writeFileSync('test/models/omg.js', ms);
   process.exit();
 }
 
