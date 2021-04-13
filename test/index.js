@@ -8,9 +8,9 @@ const main = async () => {
     port: process.env.DB_PORT,
     user: process.env.DB_USER,
     password: process.env.DB_PASS
-  }, 'ecommerce');
-  let ms = await omg.createModels('access_');
-  await fs.writeFile('output/ms.js', ms);
+  }, process.env.DB_NAME, '../pool');
+  let ms = await omg.createModels();
+  await fs.writeFile('test/output/ms.js', ms);
   console.log('\n -> file writed: output/ms.js');
 }
 
