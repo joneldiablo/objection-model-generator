@@ -14,7 +14,7 @@ import {
 } from './models';
 import { constants } from 'zlib';
 
-const dataTypes = (type) => {
+const dataTypes = ({ DATA_TYPE: dataType, COLUMN_TYPE: columnType, IS_NULLABLE: isNullable }) => {
   /* 
    * Possible types in database
    * ================
@@ -32,37 +32,60 @@ const dataTypes = (type) => {
    * integer    any
    * 
    */
-  switch (type) {
+  let toReturn = '';
+  switch (dataType) {
     case 'varchar':
     case 'longtext':
     case 'tinytext':
     case 'text':
     case 'mediumtext':
     case 'char':
-      return 'string';
+    case 'enum':
+      toReturn = 'string';
+      break;
     case 'date':
-      return 'date';
+      toReturn = 'date';
+      break;
     case 'datetime':
-      return 'date-time';
+      toReturn = 'date-time';
+      break;
+    case 'tinyint':
+      if (columnType === 'tinyint(1) unsigned')
+        toReturn = 'boolean';
+      else toReturn = 'integer';
+      break;
     case 'bigint':
     case 'int':
-    case 'tinyint':
     case 'smallint':
     case 'timestamp':
-      return 'integer';
+      toReturn = 'integer';
+      break;
     case 'decimal':
     case 'double':
     case 'float':
-      return 'number';
+      toReturn = 'number';
+      break;
+    case 'blob':
+    case 'longblob':
+      toReturn = 'object';
+      break;
     default:
-      return 'any';
+      toReturn = 'any';
+      break;
   }
+  if (isNullable === 'YES') {
+    return [toReturn, 'null'];
+  }
+  return toReturn;
 };
 
-const searchFilter = (word) => {
+const searchFilter = (word, column) => {
+  if (['blob', 'longblob'].includes(column.DATA_TYPE)) return false;
+  if (word.includes('schema')) return false;
   switch (word) {
     case 'old_password':
     case 'password':
+    case 'pass':
     case 'token':
       return false
     default:
@@ -78,7 +101,8 @@ const singularize = (word) => {
 const capitalize = (word) => word.charAt(0).toUpperCase() + word.slice(1);
 
 const camelCase = (word) => word.toLowerCase()
-  .replace(/[-_]([a-z0-9])/g, g => g[1].toUpperCase());
+  .replace(/[-_]+/, '-')
+  .replace(/-([a-z0-9])/g, g => g[1].toUpperCase());
 
 export default class ObjectionModelGenerator {
 
@@ -165,17 +189,19 @@ export default class ObjectionModelGenerator {
           if (column.IS_NULLABLE === 'NO' && !column.COLUMN_DEFAULT && column.COLUMN_NAME !== 'id') {
             requireds.push(column.COLUMN_NAME);
           }
-          let type = dataTypes(column.DATA_TYPE);
-          if (type === 'string' && searchFilter(column.COLUMN_NAME)) {
+          let type = dataTypes(column);
+          if (type.includes('string') && searchFilter(column.COLUMN_NAME, column)) {
             searches.push(column.COLUMN_NAME);
           }
           return {
             name: column.COLUMN_NAME,
-            type: type
+            type: JSON.stringify(type),
+            items: column.DATA_TYPE === 'enum' &&
+              column.COLUMN_TYPE.match(/enum\((.*)\)/)[1]
           }
         }),
-        requireds,
-        searches,
+        requireds: JSON.stringify(requireds),
+        searches: JSON.stringify(searches),
         relations: constrains.map(column => {
           let targetTableName = singularize(column.REFERENCED_TABLE_NAME);
           targetTableName = camelCase(targetTableName);

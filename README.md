@@ -1,25 +1,26 @@
 # OMG!!!!!
-Objection Model Generator is a tool to automagically generate all ObjectionJS models from Mysql data base, using the information_schema table to let us know tables, columns and BelongsToOneRelation
-
-generate routes, controllers and models:
+Objection Model Generator is a tool to _automagically_ generate all ObjectionJS models from Mysql data base, using the information_schema table to let us know tables, columns and BelongsToOneRelation.
 
 ```js
 require('dotenv').config();
-const models = require('objection-model-generator/src/dbToModel');
-const controllers = require('objection-model-generator/src/dbToControllers');
-const routes = require('objection-model-generator/src/dbToRoutes');
+const fs = require('fs-extra');
+const ObjectionModelGenerator = require('./lib/ObjectionModelGenerator.js');
 
 const main = async () => {
-  const connection = {
-    host: process.env.DB_HOST || 'localhost',
-    port: process.env.DB_PORT || '3306',
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASS || ''
-  };
-  const modelsPromise = models(process.env.DB_NAME, connection, 'knex', './test/models/models.js');
-  const controllersPromise = controllers(process.env.DB_NAME, connection, '../models', 'abstract-controller', './test/controllers');
-  const routesPromise = routes(process.env.DB_NAME, connection, './test/routes/index.js');
-  const all = await Promise.all([modelsPromise, controllersPromise, routesPromise]);
+  let omg = new ObjectionModelGenerator({
+    host: process.env.DB_HOST,
+    port: process.env.DB_PORT,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASS
+  }, process.env.DB_NAME, '../db');
+  let ms = await omg.createModels().catch(error=>({error}));
+  if(ms.error){
+    console.error(error);
+    return process.exit(1);
+  }
+  await fs.writeFile('output/ms.js', ms);
+  console.log('\n -> file writed: output/ms.js');
+  process.exit();
 }
 
 main();

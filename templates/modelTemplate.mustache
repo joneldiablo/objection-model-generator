@@ -22,12 +22,15 @@ let {{modelName}};
   static get jsonSchema() {
     return {
       type: 'object',
-      required: [{{#requireds}}'{{.}}',{{/requireds}}],
-      search: [{{#searches}}'{{.}}',{{/searches}}],
+      required: {{{requireds}}},
+      search: {{{searches}}},
       properties: {
         {{#properties}}
         {{name}}: {
-          type: '{{type}}'
+          type: {{{type}}},
+          {{#items}}
+          items: [{{{items}}}]
+          {{/items}}
         },
         {{/properties}}
       }
