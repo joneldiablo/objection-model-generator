@@ -23,11 +23,13 @@ let {{modelName}};
     return {
       type: 'object',
       required: {{{requireds}}},
-      search: {{{searches}}},
       properties: {
         {{#properties}}
         {{name}}: {
           type: {{{type}}},
+          {{#format}}
+          format: '{{format}}',
+          {{/format}}
           {{#items}}
           items: [{{{items}}}]
           {{/items}}
@@ -55,6 +57,9 @@ let {{modelName}};
     };
   }
 
+  static get search() {
+    return {{{searches}}};
+  }
 }
 
 {{/classes}}

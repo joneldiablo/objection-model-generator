@@ -12,7 +12,6 @@ import {
   KeyColumnUsage,
   TableModel
 } from './models';
-import { constants } from 'zlib';
 
 const dataTypes = ({ DATA_TYPE: dataType, COLUMN_TYPE: columnType, IS_NULLABLE: isNullable }) => {
   /* 
@@ -35,19 +34,14 @@ const dataTypes = ({ DATA_TYPE: dataType, COLUMN_TYPE: columnType, IS_NULLABLE: 
   let toReturn = '';
   switch (dataType) {
     case 'varchar':
-    case 'longtext':
     case 'tinytext':
     case 'text':
     case 'mediumtext':
     case 'char':
     case 'enum':
-      toReturn = 'string';
-      break;
     case 'date':
-      toReturn = 'date';
-      break;
     case 'datetime':
-      toReturn = 'date-time';
+      toReturn = 'string';
       break;
     case 'tinyint':
       if (columnType === 'tinyint(1) unsigned')
@@ -67,6 +61,7 @@ const dataTypes = ({ DATA_TYPE: dataType, COLUMN_TYPE: columnType, IS_NULLABLE: 
       break;
     case 'blob':
     case 'longblob':
+    case 'longtext':
       toReturn = 'object';
       break;
     default:
@@ -80,13 +75,16 @@ const dataTypes = ({ DATA_TYPE: dataType, COLUMN_TYPE: columnType, IS_NULLABLE: 
 };
 
 const searchFilter = (word, column) => {
-  if (['blob', 'longblob'].includes(column.DATA_TYPE)) return false;
+  const exceptions = ['blob', 'longblob', 'longtext', 'time', 'datetime', 'date', 'json'];
+  if (exceptions.includes(column.DATA_TYPE)) return false;
   if (word.includes('schema')) return false;
   switch (word) {
     case 'old_password':
     case 'password':
     case 'pass':
     case 'token':
+    case 'created_at':
+    case 'updated_at':
       return false
     default:
       return true;
@@ -101,7 +99,9 @@ const singularize = (word) => {
 const capitalize = (word) => word.charAt(0).toUpperCase() + word.slice(1);
 
 const camelCase = (word) => word.toLowerCase()
-  .replace(/[-_]+/, '-')
+  .replace(/[-_]+/g, '-')
+  .replace(/-([a-z0-9])/g, g => g[1].toUpperCase())
+  .replace(/-([a-z0-9])/g, g => g[1].toUpperCase())
   .replace(/-([a-z0-9])/g, g => g[1].toUpperCase());
 
 export default class ObjectionModelGenerator {
@@ -190,12 +190,19 @@ export default class ObjectionModelGenerator {
             requireds.push(column.COLUMN_NAME);
           }
           let type = dataTypes(column);
+          let format;
+          //INFO: Not working!!!
+          //if (column.DATA_TYPE.includes('date')) format = 'date';
+          //if (column.DATA_TYPE.includes('time')) format = 'time';
+          //if (column.DATA_TYPE.includes('datetime')) format = 'date-time';
+
           if (type.includes('string') && searchFilter(column.COLUMN_NAME, column)) {
             searches.push(column.COLUMN_NAME);
           }
           return {
             name: column.COLUMN_NAME,
             type: JSON.stringify(type),
+            format,
             items: column.DATA_TYPE === 'enum' &&
               column.COLUMN_TYPE.match(/enum\((.*)\)/)[1]
           }
@@ -203,13 +210,17 @@ export default class ObjectionModelGenerator {
         requireds: JSON.stringify(requireds),
         searches: JSON.stringify(searches),
         relations: constrains.map(column => {
-          let targetTableName = singularize(column.REFERENCED_TABLE_NAME);
+          let referenced = singularize(column.REFERENCED_TABLE_NAME);
+          let targetTableName =
+            singularize(column.COLUMN_NAME.replace('_' + column.REFERENCED_COLUMN_NAME, ''));
+          if (referenced != targetTableName) targetTableName = targetTableName + '_' + referenced;
           targetTableName = camelCase(targetTableName);
+          referenced = camelCase(referenced);
 
           return {
             name: targetTableName,
             column: column.COLUMN_NAME,
-            targetModel: capitalize(targetTableName) + 'Model',
+            targetModel: capitalize(referenced) + 'Model',
             targetTableName: column.REFERENCED_TABLE_NAME,
             targetColumn: column.REFERENCED_COLUMN_NAME
           }
