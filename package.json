@@ -1,6 +1,6 @@
 {
   "name": "objection-model-generator",
-  "version": "1.0.17",
+  "version": "1.0.19",
   "repository": "https://github.com/joneldiablo/objection-model-generator",
   "description": "generate the model from mysql database",
   "main": "lib/ObjectionModelGenerator.js",
@@ -24,6 +24,7 @@
   },
   "bin": {},
   "dependencies": {
+    "debug": "^4.3.3",
     "dotenv": "^8.0.0",
     "fs-extra": "^8.1.0",
     "knex": "^0.21.17",

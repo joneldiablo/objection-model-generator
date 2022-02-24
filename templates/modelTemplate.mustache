@@ -66,11 +66,6 @@ let {{modelName}};
 
 module.exports = {
   {{#classes}}
-  {{#dbFile}}
-  {{modelName}}: {{modelName}}.bindKnex(knex),
-  {{/dbFile}}
-  {{^dbFile}}
   {{modelName}},
-  {{/dbFile}}
   {{/classes}}
 }

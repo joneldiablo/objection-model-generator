@@ -74,6 +74,18 @@ const dataTypes = ({ DATA_TYPE: dataType, COLUMN_TYPE: columnType, IS_NULLABLE: 
   return toReturn;
 };
 
+const dataFormats = ({ DATA_TYPE: dataType }) => {
+  switch (dataType) {
+    case 'date':
+    case 'time':
+    //return dataType;
+    case 'datetime':
+    //return 'date-time';
+    default:
+      break;
+  }
+}
+
 const searchFilter = (word, column) => {
   const exceptions = ['blob', 'longblob', 'longtext', 'time', 'datetime', 'date', 'json'];
   if (exceptions.includes(column.DATA_TYPE)) return false;
@@ -189,12 +201,8 @@ export default class ObjectionModelGenerator {
           if (column.IS_NULLABLE === 'NO' && !column.COLUMN_DEFAULT && column.COLUMN_NAME !== 'id') {
             requireds.push(column.COLUMN_NAME);
           }
-          let type = dataTypes(column);
-          let format;
-          //INFO: Not working!!!
-          //if (column.DATA_TYPE.includes('date')) format = 'date';
-          //if (column.DATA_TYPE.includes('time')) format = 'time';
-          //if (column.DATA_TYPE.includes('datetime')) format = 'date-time';
+          const type = dataTypes(column);
+          const format = dataFormats(column);
 
           if (type.includes('string') && searchFilter(column.COLUMN_NAME, column)) {
             searches.push(column.COLUMN_NAME);
