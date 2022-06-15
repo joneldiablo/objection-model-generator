@@ -62,6 +62,7 @@ const dataTypes = ({ DATA_TYPE: dataType, COLUMN_TYPE: columnType, IS_NULLABLE: 
     case 'blob':
     case 'longblob':
     case 'longtext':
+    case 'json':
       toReturn = 'object';
       break;
     default:

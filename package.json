@@ -31,7 +31,6 @@
     "mustache": "^4.1.0",
     "mysql": "^2.17.1",
     "objection": "^2.2.14",
-    "objection-model-generator": "^1.0.9",
     "pluralize": "^8.0.0"
   },
   "devDependencies": {
