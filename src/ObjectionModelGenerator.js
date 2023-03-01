@@ -77,11 +77,11 @@ const dataTypes = ({ DATA_TYPE: dataType, COLUMN_TYPE: columnType, IS_NULLABLE: 
 
 const dataFormats = ({ DATA_TYPE: dataType }) => {
   switch (dataType) {
+    case 'datetime':
+      return 'date-time';
     case 'date':
     case 'time':
     //return dataType;
-    case 'datetime':
-    //return 'date-time';
     default:
       break;
   }
