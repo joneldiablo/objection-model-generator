@@ -2,10 +2,30 @@
  * File generated with objection-model-generator OMG!!!!
  */
 
-const {
-  Model
-} = require('objection');
+const { 
+    Model: ObjectionModel, AjvValidator
+  } = require('objection');
+const addFormats  = require('ajv-formats');
 {{#dbFile}}
 const knex = require('{{{dbFile}}}');
+{{/dbFile}}
+
+class Model extends ObjectionModel {
+  $formatDatabaseJson(json) {
+    json = super.$formatDatabaseJson(json);
+    Object.keys(json).forEach(e => json[e] = (typeof json[e] === 'string' ? json[e].trim() : json[e]));
+    return json;
+  }
+  static tableName = '';
+  static createValidator() {
+    return new AjvValidator({
+      onCreateAjv: (ajv) => {
+        addFormats(ajv);
+      }
+    });
+  }
+}
+{{#dbFile}}
+Model.knex(knex);
 {{/dbFile}}
 

@@ -66,9 +66,10 @@ module.exports = async (dbName, dbConnection, fileNameRoutes) => {
     }
   }
 
-  const singularize = (word) => {
+  const slugging = (word) => {
     let words = word.toLowerCase().split(/[_\- ]/);
-    return words.map(w => pluralize.singular(w)).join('-');
+    // TODO: mejorar remplazo de caracteres, ver functions en dbl-components
+    return words.join('-');
   };
   const capitalize = (word) => word.charAt(0).toUpperCase() + word.slice(1);
   const camelCase = (word) => word.toLowerCase()
@@ -78,27 +79,30 @@ module.exports = async (dbName, dbConnection, fileNameRoutes) => {
   let tables = await TableModel.query().where('table_schema', '=', DB).eager('[columns.[constrain]]');
   let routes = [];
   tables.forEach(table => {
-    let name = singularize(table.TABLE_NAME);
-    let routesPerController = [{
-      route: `GET /${name}`,
-      controller: `${capitalize(camelCase(name))}Controller.get`
-    },
-    {
-      route: `GET /${name}/:ID`,
-      controller: `${capitalize(camelCase(name))}Controller.getByID`
-    },
-    {
-      route: `POST /${name}`,
-      controller: `${capitalize(camelCase(name))}Controller.set`
-    },
-    {
-      route: `PATCH /${name}/:ID`,
-      controller: `${capitalize(camelCase(name))}Controller.update`
-    },
-    {
-      route: `DELETE /${name}/:ID`,
-      controller: `${capitalize(camelCase(name))}Controller.delete`
-    }
+    let name = slugging(table.TABLE_NAME);
+    if (name.startsWith('-')) return;
+    const nameSnake = pluralize.singular(capitalize(camelCase(name)));
+    let routesPerController = [
+      {
+        route: `GET /${name}`,
+        controller: `${nameSnake}.get`
+      },
+      {
+        route: `GET /${name}/:ID`,
+        controller: `${nameSnake}.getByID`
+      },
+      {
+        route: `POST /${name}`,
+        controller: `${nameSnake}.set`
+      },
+      {
+        route: `PATCH /${name}/:ID`,
+        controller: `${nameSnake}.update`
+      },
+      {
+        route: `DELETE /${name}/:ID`,
+        controller: `${nameSnake}.delete`
+      }
     ]
     routes.push(...routesPerController);
   });
