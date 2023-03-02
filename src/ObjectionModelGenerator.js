@@ -99,7 +99,7 @@ export default class ObjectionModelGenerator {
 
     // Initialize knex.
     const knex = Knex({
-      client: 'mysql',
+      client: 'mysql2',
       connection: {
         ...credentials,
         database: 'information_schema'
