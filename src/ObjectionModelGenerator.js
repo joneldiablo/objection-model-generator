@@ -106,7 +106,7 @@ const searchFilter = (word, column) => {
 
 const singularize = (word) => {
   let words = word.toLowerCase().split(/[_\- ]/);
-  return words.map(w => pluralize.singular(w)).join('-');
+  return words.map(w => p7e.singular(w)).join('-');
 };
 
 const capitalize = (word) => word.charAt(0).toUpperCase() + word.slice(1);
@@ -116,6 +116,8 @@ const camelCase = (word) => word.toLowerCase()
   .replace(/-([a-z0-9])/g, g => g[1].toUpperCase())
   .replace(/-([a-z0-9])/g, g => g[1].toUpperCase())
   .replace(/-([a-z0-9])/g, g => g[1].toUpperCase());
+
+let p7e = pluralize;
 
 export default class ObjectionModelGenerator {
 
@@ -240,6 +242,10 @@ export default class ObjectionModelGenerator {
     models += Mustache.render(templateModel, classModelNames);
     return models;
   };
+
+  set pluralize(p) {
+    p7e = p;
+  }
 
   get version() {
     return version;
