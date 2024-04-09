@@ -1,0 +1,153 @@
+import Knex from 'knex';
+import { Model, AjvValidator } from 'objection';
+import addFormats from 'ajv-formats';
+import pluralize from 'pluralize';
+
+// Maps SQL data types to JSON Schema types for validation
+function mapSqlTypeToJsonSchemaType(column) {
+  const dataType = column.DATA_TYPE.toLowerCase();
+  switch (dataType) {
+    // String types
+    case 'varchar':
+    case 'text':
+    case 'char':
+    case 'mediumtext':
+    case 'longtext':
+    case 'enum':
+    case 'set':
+    case 'date':
+    case 'time':
+    case 'datetime':
+    case 'timestamp':
+      return { type: 'string' };
+    // Integer types, note: unsigned int mapped as 'integer', signed int as 'number'
+    case 'tinyint':
+    case 'smallint':
+    case 'mediumint':
+    case 'int':
+    case 'bigint':
+      return { type: column.COLUMN_TYPE.includes('unsigned') ? 'integer' : 'number' };
+    // Decimal types
+    case 'float':
+    case 'double':
+    case 'decimal':
+      return { type: 'number' };
+    // JSON type, could be an object or an array depending on use
+    case 'json':
+      return { type: 'object' };
+    // Boolean type
+    case 'bit':
+    case 'boolean':
+      return { type: 'boolean' };
+    // Binary types, usually base64 encoded
+    case 'binary':
+    case 'varbinary':
+    case 'blob':
+    case 'tinyblob':
+    case 'mediumblob':
+    case 'longblob':
+      return { type: 'string', contentEncoding: 'base64' };
+    // Default type if SQL data type is unrecognized
+    default:
+      return { type: 'string' };
+  }
+}
+
+// Generates dynamic models based on the database schema
+function generateDynamicModel(knexConfig, dbName) {
+  // Initialize Knex with provided configuration and database name
+  const knex = Knex({
+    ...knexConfig,
+    connection: { ...knexConfig.connection, database: dbName }
+  });
+
+  // Bind the Knex instance to Objection Model
+  Model.knex(knex);
+
+  // BaseModel with customizations, applied to all generated models
+  class BaseModel extends Model {
+    // Trim string values before inserting into DB
+    $formatDatabaseJson(json) {
+      json = super.$formatDatabaseJson(json);
+      Object.keys(json).forEach(key => {
+        json[key] = (typeof json[key] === 'string' ? json[key].trim() : json[key]);
+      });
+      return json;
+    }
+
+    // Create a validator for JSON Schema validation
+    static createValidator() {
+      return new AjvValidator({
+        onCreateAjv: (ajv) => {
+          // Add additional format support to AJV
+          addFormats(ajv);
+        }
+      });
+    }
+  }
+
+  // Async function to generate models based on database tables
+  return async () => {
+    const tables = await knex('information_schema.tables')
+      .where('table_schema', '=', dbName);
+
+    const models = {};
+
+    // Loop through each table and generate a model
+    for (const table of tables) {
+      const tableName = table.TABLE_NAME;
+      const columns = await knex('information_schema.columns')
+        .where({ table_name: tableName, table_schema: dbName });
+
+      // Generate JSON Schema for model validation
+      const jsonSchema = {
+        type: 'object',
+        properties: columns.reduce((props, column) => {
+          props[column.COLUMN_NAME] = mapSqlTypeToJsonSchemaType(column);
+          return props;
+        }, {}),
+        // Mark non-nullable columns without default values as required
+        required: columns.filter(column => column.IS_NULLABLE === 'NO' && column.COLUMN_DEFAULT === null).map(column => column.COLUMN_NAME)
+      };
+
+      // Generate a model name by singularizing the table name and converting to camelCase
+      const modelName = pluralize.singular(tableName).replace(/_./g, char => char[1].toUpperCase());
+
+      // Define the model class dynamically
+      const ModelClass = class extends BaseModel {
+        static get tableName() {
+          return tableName;
+        }
+
+        static get jsonSchema() {
+          return jsonSchema;
+        }
+      };
+
+      // Add the model to the models object using the generated name
+      models[modelName] = ModelClass;
+    }
+
+    // Return the generated models
+    return models;
+  };
+}
+
+// Example Knex configuration for MySQL
+const knexConfig = {
+  client: 'mysql',
+  connection: {
+    host: 'your-host',
+    user: 'your-user',
+    password: 'your-password'
+  }
+};
+
+// Generate models based on the provided database configuration
+const getModels = generateDynamicModel(knexConfig, 'your-database-name');
+
+// Use the generated models, e.g., models.User, models.Product
+getModels().then(models => {
+  // Example usage
+});
+
